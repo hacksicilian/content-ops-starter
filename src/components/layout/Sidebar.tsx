@@ -201,7 +201,7 @@ export function Sidebar({ user }: SidebarProps) {
                         <div key={section.title}>
                             <div className="nav-section">{section.title}</div>
                             {visibleItems.map(item => {
-                                const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
+                                const isActive = pathname === item.href || (pathname?.startsWith(item.href + '/') ?? false);
                                 return (
                                     <Link
                                         key={item.href}
