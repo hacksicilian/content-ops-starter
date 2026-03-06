@@ -1,0 +1,120 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  nombre    String
+  rol       Rol      @default(VENDEDOR)
+  createdAt DateTime @default(now())
+  ventas    Venta[]
+}
+
+model Producto {
+  id           String      @id @default(cuid())
+  codigoNatura String?     @unique
+  nombre       String
+  descripcion  String?
+  categoria    String
+  precioVenta  Float
+  precioCosto  Float
+  imagenUrl    String?
+  activo       Boolean     @default(true)
+  stockMinimo  Int         @default(3)
+  createdAt    DateTime    @default(now())
+  lotes        Lote[]
+  itemsVenta   ItemVenta[]
+}
+
+model Lote {
+  id               String       @id @default(cuid())
+  productoId       String
+  producto         Producto     @relation(fields: [productoId], references: [id], onDelete: Cascade)
+  cantidad         Int
+  cantidadInicial  Int
+  precioCosto      Float
+  fechaVencimiento DateTime?
+  numeroLote       String?
+  fechaIngreso     DateTime     @default(now())
+  movimientos      Movimiento[]
+}
+
+model Movimiento {
+  id        String         @id @default(cuid())
+  loteId    String
+  lote      Lote           @relation(fields: [loteId], references: [id], onDelete: Cascade)
+  tipo      TipoMovimiento
+  cantidad  Int
+  motivo    String?
+  ventaId   String?
+  fecha     DateTime       @default(now())
+}
+
+model Cliente {
+  id        String   @id @default(cuid())
+  nombre    String
+  telefono  String?
+  email     String?
+  direccion String?
+  createdAt DateTime @default(now())
+  ventas    Venta[]
+}
+
+model Venta {
+  id             String     @id @default(cuid())
+  fecha          DateTime   @default(now())
+  canal          CanalVenta
+  clienteId      String?
+  cliente        Cliente?   @relation(fields: [clienteId], references: [id])
+  total          Float
+  estadoPago     EstadoPago @default(PENDIENTE)
+  mpPaymentId    String?
+  mpPreferenceId String?
+  vendedorId     String
+  vendedor       User       @relation(fields: [vendedorId], references: [id])
+  items          ItemVenta[]
+  notas          String?
+  createdAt      DateTime   @default(now())
+}
+
+model ItemVenta {
+  id             String   @id @default(cuid())
+  ventaId        String
+  venta          Venta    @relation(fields: [ventaId], references: [id], onDelete: Cascade)
+  productoId     String
+  producto       Producto @relation(fields: [productoId], references: [id])
+  cantidad       Int
+  precioUnitario Float
+}
+
+enum Rol {
+  ADMIN
+  VENDEDOR
+}
+
+enum TipoMovimiento {
+  ENTRADA
+  SALIDA
+  AJUSTE
+}
+
+enum CanalVenta {
+  FISICO
+  WHATSAPP
+  INSTAGRAM
+  ONLINE
+  MERCADOLIBRE
+}
+
+enum EstadoPago {
+  PENDIENTE
+  PAGADO
+  CANCELADO
+  DEVUELTO
+}
