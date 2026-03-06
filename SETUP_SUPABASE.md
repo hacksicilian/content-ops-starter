@@ -1,142 +1,143 @@
 # Setup Supabase — TelecomOps
-
-## Paso 1: Crear proyecto en Supabase
-
-1. Ir a **https://app.supabase.com**
-2. Click **"New project"**
-3. Completar:
-   - **Name**: `telecomops` (o el nombre que quieras)
-   - **Database Password**: guardarlo en un lugar seguro
-   - **Region**: South America (São Paulo) — más cerca y más rápido
-4. Esperar ~2 minutos que el proyecto se crea
+## Tiempo estimado: 15 minutos
 
 ---
 
-## Paso 2: Ejecutar el Schema (base de datos)
+## PASO 1 — Crear proyecto
 
-1. En el panel de Supabase → ir a **SQL Editor** (ícono de código en la barra lateral)
+1. Ir a **https://app.supabase.com** → **New project**
+2. Completar:
+   - **Name**: `telecomops`
+   - **Database Password**: anotarlo
+   - **Region**: `South America (São Paulo)`
+3. Esperar ~2 min que termine de crear
+
+---
+
+## PASO 2 — Ejecutar el schema
+
+1. Panel Supabase → **SQL Editor** (ícono `</>` en la barra lateral)
 2. Click **"New query"**
-3. Copiar y pegar el contenido de `supabase/schema.sql`
-4. Click **Run** (o Ctrl+Enter)
-5. Deberías ver: *"Success. No rows returned"*
+3. Copiar todo el contenido de `supabase/schema.sql` y pegarlo
+4. Click **RUN** (o `Ctrl+Enter`)
+5. Resultado esperado: *"Success. No rows returned"*
 
 ---
 
-## Paso 3: Crear los 6 usuarios
+## PASO 3 — Crear los 6 usuarios
 
-En Supabase → **Authentication** → **Users** → **Invite user**
+Ir a **Authentication → Users → Invite user** y crear cada uno:
 
-Crear uno por uno:
+| Email | Nombre | Rol |
+|-------|--------|-----|
+| `pmo@empresa.com` | Tu nombre | `admin` |
+| `alexis@empresa.com` | Alexis | `controller` |
+| `marcelo@empresa.com` | Marcelo | `im_swap` |
+| `eduardo@empresa.com` | Eduardo | `im_tss` |
+| `leandro@empresa.com` | Leandro | `backoffice` |
+| `jefe@empresa.com` | Nombre del jefe | `viewer` |
 
-| Email | Nombre | Rol a asignar |
-|-------|--------|---------------|
-| `pmo@tuempresa.com` | Tu nombre | `admin` |
-| `alexis@tuempresa.com` | Alexis | `controller` |
-| `marcelo@tuempresa.com` | Marcelo | `im_swap` |
-| `eduardo@tuempresa.com` | Eduardo | `im_tss` |
-| `leandro@tuempresa.com` | Leandro | `backoffice` |
-| `jefe@tuempresa.com` | (nombre del jefe) | `viewer` |
+> ✅ **El perfil se crea automáticamente** gracias al trigger instalado en el schema.
+> Por defecto el rol es `viewer` — hay que cambiarlo para cada usuario.
 
-> **Importante**: Cada usuario recibirá un email con link para establecer contraseña.
-> Si no querés usar email real, podés crear usuarios directamente desde SQL (ver abajo).
+### Cambiar el rol de cada usuario
 
-### Alternativa: crear usuarios via SQL (sin email real)
-
-En SQL Editor, ejecutar por cada usuario:
+En **SQL Editor**, ejecutar (reemplazando el email):
 
 ```sql
--- Reemplazar email y password según corresponda
-SELECT supabase_auth.create_user(
-  email := 'pmo@telecomops.com',
-  password := 'TuContraseña123!',
-  email_confirm := true
-);
+UPDATE public.users SET name = 'Alexis García', role = 'controller'
+WHERE email = 'alexis@empresa.com';
+
+UPDATE public.users SET name = 'Marcelo López', role = 'im_swap'
+WHERE email = 'marcelo@empresa.com';
+
+UPDATE public.users SET name = 'Eduardo Ruiz', role = 'im_tss'
+WHERE email = 'eduardo@empresa.com';
+
+UPDATE public.users SET name = 'Leandro Sosa', role = 'backoffice'
+WHERE email = 'leandro@empresa.com';
+
+-- PMO (vos) — rol admin
+UPDATE public.users SET name = 'Tu Nombre', role = 'admin'
+WHERE email = 'pmo@empresa.com';
 ```
+
+O desde la app: loguearte como admin → `/admin/usuarios` → cambiar el rol desde el dropdown.
 
 ---
 
-## Paso 4: Asignar roles en la tabla `users`
+## PASO 4 — Cargar datos de prueba (opcional pero recomendado)
 
-Después de crear los usuarios en Auth, ir a **Table Editor** → tabla `users`.
-
-Si los perfiles no se crearon automáticamente, ejecutar en SQL Editor
-(reemplazando los UUIDs con los que aparecen en Authentication → Users):
-
-```sql
-INSERT INTO public.users (id, email, name, role) VALUES
-  ('UUID-PMO',     'pmo@tuempresa.com',     'Tu Nombre',    'admin'),
-  ('UUID-ALEXIS',  'alexis@tuempresa.com',  'Alexis García','controller'),
-  ('UUID-MARCELO', 'marcelo@tuempresa.com', 'Marcelo López','im_swap'),
-  ('UUID-EDUARDO', 'eduardo@tuempresa.com', 'Eduardo Ruiz', 'im_tss'),
-  ('UUID-LEANDRO', 'leandro@tuempresa.com', 'Leandro Sosa', 'backoffice'),
-  ('UUID-JEFE',    'jefe@tuempresa.com',    'Nombre Jefe',  'viewer');
-```
-
-> Los UUIDs los obtenés de: **Authentication → Users** → click en el usuario → copiar el `User UID`
-
----
-
-## Paso 5: Cargar datos de ejemplo (opcional)
-
-Para ver la app con datos reales de muestra:
+Para ver la app funcionando con datos reales de muestra:
 
 1. SQL Editor → New query
-2. Pegar el contenido de `supabase/seed.sql`
+2. Copiar todo el contenido de `supabase/seed.sql`
 3. Run
+
+Incluye: 15 despliegues, tareas Kanban, stock, horas improductivas, accesos a sitios, facturas y planificación.
 
 ---
 
-## Paso 6: Configurar variables de entorno
+## PASO 5 — Configurar variables de entorno
 
-1. En Supabase → **Settings** → **API**
-2. Copiar:
-   - **Project URL** → `NEXT_PUBLIC_SUPABASE_URL`
-   - **anon public key** → `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-   - **service_role key** → `SUPABASE_SERVICE_ROLE_KEY`
+1. En Supabase → **Settings** (⚙️) → **API**
+2. Copiar los valores:
 
-3. Editar el archivo `.env.local` en la raíz del proyecto:
+```
+Project URL        → NEXT_PUBLIC_SUPABASE_URL
+anon / public key  → NEXT_PUBLIC_SUPABASE_ANON_KEY
+service_role key   → SUPABASE_SERVICE_ROLE_KEY
+```
+
+3. Abrir `.env.local` en la raíz del proyecto y reemplazar:
 
 ```env
-NEXT_PUBLIC_SUPABASE_URL=https://XXXXXX.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+NEXT_PUBLIC_SUPABASE_URL=https://XXXXXXXX.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGci...
+SUPABASE_SERVICE_ROLE_KEY=eyJhbGci...
 ```
 
 ---
 
-## Paso 7: Levantar la app localmente
+## PASO 6 — Levantar la app
 
 ```bash
 npm run dev
 ```
 
-Ir a **http://localhost:3000** → te va a redirigir al login.
-
-Ingresar con las credenciales creadas en el Paso 3.
+Abrir **http://localhost:3000** → Login con tu email y contraseña.
 
 ---
 
-## Paso 8: Deploy en Netlify (producción)
+## PASO 7 — Deploy en Netlify (producción)
 
-1. **Netlify** → tu sitio → **Site settings** → **Environment variables**
-2. Agregar las 3 variables de `.env.local`
-3. En Netlify → **Deploys** → trigger deploy
+1. **Netlify** → tu sitio → **Site configuration** → **Environment variables**
+2. Agregar las mismas 3 variables del `.env.local`
+3. **Deploys** → **Trigger deploy**
+
+La URL pública ya funciona para todos los usuarios.
 
 ---
 
 ## Troubleshooting
 
-### "Invalid API key" al iniciar sesión
-→ Verificar que las variables en `.env.local` son correctas (sin espacios al final)
+| Problema | Solución |
+|----------|----------|
+| "Invalid API key" al login | Verificar que las keys en `.env.local` son correctas (sin espacios) |
+| Login OK pero app en blanco | El perfil de usuario no existe en `public.users` — correr el UPDATE de roles |
+| Error 403 en operaciones | Las RLS policies están activas — verificar que el rol del usuario es correcto |
+| Redirige siempre al login | El perfil en `public.users` tiene el mismo UUID que en `auth.users` — verificar |
+| Datos del seed no cargan | Asegurarse de haber creado los usuarios ANTES de correr `seed.sql` |
 
-### Login muestra error aunque las credenciales son correctas
-→ Verificar que el usuario existe en `Authentication → Users` Y en la tabla `public.users`
+---
 
-### Las páginas cargan pero sin datos
-→ Ejecutar `supabase/seed.sql` para cargar datos de prueba
+## Roles y permisos
 
-### Error 403 al hacer operaciones
-→ Revisar las RLS Policies en Supabase → **Authentication → Policies** — verificar que están activas
-
-### La app redirige siempre al login aunque estoy logueado
-→ Verificar que el perfil del usuario existe en `public.users` con el mismo UUID de `auth.users`
+| Rol | Módulos accesibles |
+|-----|--------------------|
+| `admin` | Todo + Admin de usuarios |
+| `controller` | Dashboard, Panel, Kanban, Stock, Inversas, Planif., Horas, RRHH, Facturación |
+| `im_swap` | Dashboard, Panel, Kanban, Stock, Inversas, Horas, Planificación |
+| `im_tss` | Dashboard, Panel, Kanban, Stock, Inversas, Horas, Planificación |
+| `backoffice` | Dashboard, RRHH, Facturación, Accesos, Horas |
+| `viewer` | Solo Dashboard (read-only) |

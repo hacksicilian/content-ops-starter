@@ -19,6 +19,27 @@ CREATE TABLE public.users (
     updated_at TIMESTAMPTZ DEFAULT now()
 );
 
+-- Trigger: auto-crear perfil en public.users cuando se crea un usuario en auth.users
+-- Esto evita tener que hacer INSERT manual después de crear usuarios en Supabase Auth
+CREATE OR REPLACE FUNCTION public.handle_new_user()
+RETURNS TRIGGER AS $$
+BEGIN
+    INSERT INTO public.users (id, email, name, role)
+    VALUES (
+        NEW.id,
+        NEW.email,
+        COALESCE(NEW.raw_user_meta_data->>'name', split_part(NEW.email, '@', 1)),
+        COALESCE(NEW.raw_user_meta_data->>'role', 'viewer')
+    )
+    ON CONFLICT (id) DO NOTHING;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+CREATE OR REPLACE TRIGGER on_auth_user_created
+    AFTER INSERT ON auth.users
+    FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
+
 -- ============================================================
 -- DEPLOYMENTS (núcleo del panel de control)
 -- ============================================================
